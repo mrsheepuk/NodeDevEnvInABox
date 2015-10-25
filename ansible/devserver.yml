@@ -1,0 +1,6 @@
+- hosts: devservers
+  roles:
+    - common
+    - local-registry
+    - jenkins
+    - kanboard

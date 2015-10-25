@@ -1,0 +1,5 @@
+# By default, don't add swap
+add_swap: no
+mount_iscsi: no
+data_store: /opt/devenv-data
+devadmin_user: devenvadmin

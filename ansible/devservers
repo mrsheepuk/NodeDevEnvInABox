@@ -1,0 +1,5 @@
+[devservers]
+localhost   ansible_connection=local
+
+[all:children]
+devservers

@@ -1,0 +1,68 @@
+- name: Ensure jenkins group exists on host
+  sudo: yes
+  group: name=jenkins gid=1100 state=present
+  tags:
+    - jenkins
+
+- name: Ensure jenkins user exists on host
+  sudo: yes
+  user: name=jenkins uid=1100 shell=/bin/bash group=jenkins groups=docker append=yes home={{ data_store }}/jenkins
+  tags:
+    - jenkins
+
+- name: Ensure jenkins home directory exists
+  sudo: yes
+  file: dest="{{ data_store }}/jenkins" mode=777 owner=jenkins group=jenkins state=directory
+  tags:
+    - jenkins
+
+- name: Ensure build-slave directory exists
+  sudo: yes
+  file: dest="{{ data_store }}/buildslave" mode=777 owner=jenkins group=jenkins state=directory
+  tags:
+    - jenkins
+
+- name: ensure UFW allows traffic on port 80 to jenkins.
+  sudo: yes
+  ufw: rule=allow port=80 proto=tcp
+  tags:
+    - jenkins
+    - ufw
+    
+- name: ensure UFW allows traffic on port 2375 to docker, so jenkins can connect to it.
+  sudo: yes
+  ufw: rule=allow port=2375 proto=tcp
+  tags:
+    - jenkins
+    - ufw
+
+- name: Start build slave container
+  docker:
+    name: buildslave
+    detach: true
+    image: mrsheepuk/node-jenkins-buildslave
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "{{ data_store }}/buildslave:/home/jenkins"
+    restart_policy: always
+    state: started
+  tags:
+    - jenkins
+ 
+- name: Start jenkins container
+  docker:
+    name: jenkins
+    detach: true
+    image: mrsheepuk/jenkins-docker
+    ports:
+      - "80:8080"
+      - "50000:50000"
+    links:
+      - "buildslave:buildslave"
+    volumes:
+      - "{{ data_store }}/jenkins:/var/jenkins_home"
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart_policy: always
+    state: started
+  tags:
+    - jenkins

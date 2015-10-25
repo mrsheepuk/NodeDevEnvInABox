@@ -1,0 +1,26 @@
+- name: Ensure local registry data directory exists
+  sudo: true
+  file: dest="{{ data_store }}/registry" mode=777 state=directory
+  tags:
+    - local-registry
+
+- name: ensure UFW allows traffic on port 5000 to local registry.
+  sudo: yes
+  ufw: rule=allow port=5000 proto=tcp
+  tags:
+    - local-registry
+    - ufw
+
+- name: Ensure local registry container present and running
+  sudo: true
+  docker:
+    name: registry
+    detach: true
+    volumes:
+      - "{{ data_store }}/registry:/var/lib/registry"
+    ports: 5000:5000
+    image: registry:2
+    restart_policy: always
+    state: started
+  tags:
+    - local-registry

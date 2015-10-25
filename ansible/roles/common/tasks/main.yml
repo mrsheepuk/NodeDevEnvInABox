@@ -1,0 +1,72 @@
+- name: Ensure devenv-data directory exists
+  sudo: yes
+  file: dest={{ data_store }} mode=777 state=directory
+  tags:
+    - data
+
+- name: be sure ntp is installed
+  sudo: yes
+  apt: name=ntp state=present update_cache=yes
+  tags:
+    - ntp
+
+- name: be sure ntp is configured
+  sudo: yes
+  template: src=ntp.conf.j2 dest=/etc/ntp.conf
+  notify:
+    - restart ntp
+  tags:
+    - ntp
+
+- name: be sure ntp is running and enabled
+  sudo: yes
+  service: name=ntp state=running
+  tags:
+    - ntp
+
+- name: be sure UFW is configured to allow SSH
+  sudo: yes
+  ufw: rule=allow port=22 proto=tcp
+  tags:
+    - ufw
+    - ssh
+
+- name: enable ufw
+  sudo: yes
+  ufw: state=enabled policy=deny
+  when: disable_fw is not defined
+  tags:
+    - ufw
+
+- name: ensure devadmin user present
+  sudo: yes
+  user: name={{ devadmin_user }} shell=/bin/bash group=sudo
+  tags:
+    - users
+
+- name: ensure devadmin user authorised keys present
+  sudo: yes
+  authorized_key: user={{ devadmin_user }} key="{{ item }}"
+  with_items: devadmin_authorized_keys
+  tags:
+    - users
+
+- name: ensure {{devadmin_user}} nopasswd set
+  sudo: yes
+  template: src=nopasswd.j2 dest="/etc/sudoers.d/{{ item }}"
+  tags:
+    - users
+  with_items: 
+    - "{{ devadmin_user }}"
+    
+- include: addswap.yml
+  sudo: yes
+  when: add_swap
+  tags:
+    - swap
+
+- include: mountiscsi.yml
+  sudo: yes
+  when: mount_iscsi
+  tags:
+    - iscsi

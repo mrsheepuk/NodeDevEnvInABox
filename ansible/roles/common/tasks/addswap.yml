@@ -1,0 +1,43 @@
+- name: Create swap file
+  command: fallocate -l 1G /swapfile
+           creates=/swapfile
+  tags:
+    - swap
+
+- name: Change swap file permissions
+  file: path=/swapfile
+        owner=root
+        group=root
+        mode=0600
+  tags:
+    - swap
+
+- name: "Check swap file type"
+  command: file /swapfile
+  register: swapfile
+  tags:
+    - swap
+
+- name: Make swap file
+  command: "sudo mkswap /swapfile"
+  when: swapfile.stdout.find('swap file') == -1
+  tags:
+    - swap
+
+- name: Write swap entry in fstab
+  mount: name=none
+         src=/swapfile
+         fstype=swap
+         opts=sw
+         passno=0
+         dump=0
+         state=present
+  tags:
+    - swap
+
+- name: Mount swap
+  sudo: yes
+  command: "swapon /swapfile"
+  when: ansible_swaptotal_mb < 1
+  tags:
+    - swap

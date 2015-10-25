@@ -1,0 +1,38 @@
+- name: Ensure kanboard group exists on host
+  sudo: yes
+  group: name=kanboard gid=1101 state=present
+  tags:
+    - kanboard
+
+- name: Ensure kanboard user exists on host
+  sudo: yes
+  user: name=kanboard uid=1101 shell=/bin/bash group=kanboard groups=docker append=yes home=/opt/sheeptracker-data/kanboard
+  tags:
+    - kanboard
+
+- name: Ensure kanboard home directory exists
+  sudo: yes
+  file: dest="{{ data_store }}/kanboard" mode=777 owner=kanboard group=kanboard state=directory
+  tags:
+    - kanboard
+
+- name: ensure UFW allows traffic on port 8080 to kanboard.
+  sudo: yes
+  ufw: rule=allow port=8080 proto=tcp
+  tags:
+    - kanboard
+    - ufw
+    
+- name: Start kanboard container
+  docker:
+    name: kanboard
+    detach: true
+    image: kanboard/kanboard:stable
+    ports:
+      - "8080:80"
+    volumes:
+      - "{{ data_store }}/kanboard:/var/www/html/data"
+    restart_policy: always
+    state: started
+  tags:
+    - kanboard

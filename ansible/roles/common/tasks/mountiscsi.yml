@@ -1,0 +1,34 @@
+- name: be sure openiscsi is installed
+  sudo: yes
+  apt: name=open-iscsi state=present update_cache=yes
+  tags:
+    - iscsi
+
+- name: search for iscsi targets
+  sudo: yes
+  command: /usr/bin/iscsiadm -m discovery -t st -p {{ mount_iscsi_portal }}:3260 creates=/dev/sdb
+  tags:
+    - iscsi
+
+- name: set the target to start automatically
+  sudo: yes
+  lineinfile: dest=/etc/iscsi/nodes/{{ mount_iscsi }}/{{ mount_iscsi_portal }},3260,0/default regexp="^node\.startup = " line="node.startup = automatic"
+  notify:
+    - restart openiscsi
+  tags:
+    - iscsi
+
+# Ensure that any pending restart of open-iscsi is done before continuing.
+- meta: flush_handlers
+
+- name: ensure mount point exists
+  sudo: yes
+  file: dest="{{ mount_iscsi_mountpoint }}" state=directory
+  tags:
+    - iscsi
+
+- name: mount iscsi target in appropriate place
+  sudo: yes
+  mount: name="{{ mount_iscsi_mountpoint }}" src=/dev/sdb1 fstype=ext4 state=mounted opts="defaults,auto,_netdev"
+  tags:
+    - iscsi
