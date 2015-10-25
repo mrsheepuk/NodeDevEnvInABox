@@ -6,7 +6,7 @@
 
 - name: Ensure kanboard user exists on host
   sudo: yes
-  user: name=kanboard uid=1101 shell=/bin/bash group=kanboard groups=docker append=yes home=/opt/sheeptracker-data/kanboard
+  user: name=kanboard uid=1101 shell=/bin/bash group=kanboard groups=docker append=yes home="{{ data_store }}/kanboard"
   tags:
     - kanboard
 
