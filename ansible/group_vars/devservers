@@ -1,0 +1,18 @@
+---
+# Variables for dev servers
+# Specify this to mount an iscsi target for your data, e.g.: 
+# mount_iscsi: iqn.2000-01.com.synology:brian.target-1.d531ea31e2
+# mount_iscsi_portal: 192.168.20.101
+# mount_iscsi_mountpoint: /opt/devenv-data
+
+data_store: /opt/devenv-data
+devadmin_user: devadmin
+devadmin_authorized_keys: 
+ - "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEA0RrtRh6ze4ydOAjQOVWgQ31GKQZrEgogVoGv8o1kYUp4Cyt6jx8dcA4BLcuDFVJxCbwGnfu3KyaLzhquCzXdEKRc1aRJbeuijwkk7b9pJFsGqaw8pfh2NKg32M6/r9g7VPHx1eOmNgzhZprua8VJH8Fx95v8AHjxMTMQHECf9WbaeyPZ/D8WhSKmOHdWflSMY1aX9caVSSfnvjVUucAb73GK4hxxW4sumSfBTsIFOyQ11dGbV3lNeBQBX7VCRKoKhPoHf0R1MGNqS302LkdSxxsGJ4kTghAfTzmVVun12mhz4d06P5e9GIdMKb05lpQrk7Xa+eJ7fch94tIRekQ== rsa-key-20150207"
+
+# Bind docker to both all IP addresses and to the unix socket for dev 
+# purposes.
+docker_opts: "-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock"
+docker_group_members: 
+  - "{{ devadmin_user }}"
+  - vagrant
